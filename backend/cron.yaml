@@ -1,0 +1,4 @@
+cron:
+- description: "Scrap Top Apps"
+  url: /storeapps
+  schedule: every 6 hours

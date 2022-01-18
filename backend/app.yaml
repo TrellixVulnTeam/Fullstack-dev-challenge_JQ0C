@@ -1,0 +1,21 @@
+service: navneet-fullstack-backend
+runtime: python27
+api_version: 1
+threadsafe: true
+
+skip_files:
+  - ^(.*/)?#.*#$
+  - ^(.*/)?.*~$
+  - ^(.*/)?.*\.py[co]$
+  - ^(.*/)?.*/RCS/.*$
+  - ^(.*/)?\..*$
+  - venv/
+
+
+handlers:
+- url: /.*
+  script: main.app
+
+#libraries:
+#- name: ssl
+#  version: latestcd
