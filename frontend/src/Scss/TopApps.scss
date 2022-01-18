@@ -1,0 +1,10 @@
+.TopApps{
+    .apps{
+        display:flex ; 
+        flex-wrap: wrap;
+        padding : 1%;
+    }
+    >header{
+        text-align: center;
+    }
+}

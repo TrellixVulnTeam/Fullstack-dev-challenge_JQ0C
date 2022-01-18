@@ -1,0 +1,59 @@
+.app-details{
+    margin: auto;
+    width: 80%;
+    margin-top: 5%;
+    .header{
+        position: relative;
+        .logo{
+            display: inline-block ;
+        }
+        .info{
+            display: inline-block;
+            vertical-align: top;
+            width: 40%;
+            margin-left: 5%;
+            .name{
+                color: #2B416C;
+                font-size: 3vh;
+                margin-bottom: 5%;
+            }
+            .developer{
+                text-transform: uppercase;
+                color: #7788A3;
+                margin-right: 3%;
+                display: inline
+            }
+            .genre{
+                text-transform: uppercase;
+                color: #7788A3;
+                display: inline;
+            }
+        }
+        .install{
+            position: absolute;
+            right : 0;
+            top:50%;
+
+            a{
+                text-decoration: none;
+                border: 1px solid ;
+                padding: 10px 20px;
+                background: #83A515;
+                color : white
+            }
+            
+        }
+    }
+    .resources{
+        overflow-x: scroll;
+        white-space: nowrap;
+        margin-top: 3%;
+        img{
+            margin-right: 5%;
+        }
+    }
+    .description{
+        color: #7788A3;
+        margin-top: 5%;
+    }
+}
