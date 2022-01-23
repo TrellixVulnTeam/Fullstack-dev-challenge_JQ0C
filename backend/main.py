@@ -9,6 +9,7 @@ import logging
 
 from google.appengine.ext import db
 from google.appengine.ext import gql
+from google.appengine.api import memcache
 # from google.appengine.api import namespace_manager
 # import requests
 # import re
@@ -18,8 +19,8 @@ import wsgiref.handlers
 # import  urllib2
 # import datetime
 # import os
-from google.appengine.api import users
-# from google.appengine.api import taskqueue
+# from google.appengine.api import users
+from google.appengine.api import taskqueue
 # from bs4 import BeautifulSoup
 import requests_toolbelt.adapters.appengine
 requests_toolbelt.adapters.appengine.monkeypatch()
@@ -35,31 +36,28 @@ class HelloWebapp2(webapp2.RequestHandler):
 
 class StoreAppsInDB(webapp2.RequestHandler):
     def get(self):
-        ds = DataScrap()
-        result = ds.ScrapTopApps()
-        # Changes --> Store all entities in one Array and make one write request
-        for pkg_name , app_details in result.items() :
-            topApps = modals.TopAppsModel(key_name=pkg_name)
-            topApps.name = app_details['name']
-            topApps.company = app_details['company']
-            topApps.logo = app_details['logo']
-            topApps.category = app_details['category']
-            topApps.rating = app_details['rating']
-            topApps.details = app_details['details']
-            topApps.put()
+        task = taskqueue.add(
+            url='/scraptopapps',
+            target='worker',
+            queue_name='TopAppsScrappper')
+        self.response.write('Scrapped Apps')
 
 class TopApps():
     def getApps(self, type, x = None):
-        topApps = modals.TopAppsModel()
-        apps = topApps.gql("WHERE category = '%s'"%(type)).run(limit=x)
-        result = []
-        for app in apps :
-            result.append({'company' : app.company , 'pkg_name' : app.key().name() , 'logo' : app.logo , 'name' : app.name})
+        key = type + ('' if x is None else ':{0}'.format(x))
+        cachedResult = memcache.get(key)
+        result =[]
+        if(cachedResult is None):
+            topApps = modals.TopAppsModel()
+            apps = topApps.gql("WHERE category = '%s'"%(type)).run(limit=x)
+            for app in apps :
+                result.append({'company' : app.company , 'pkg_name' : app.key().name() , 'logo' : app.logo , 'name' : app.name})
+
+            memcache.set(key , result)
+        else:
+            result = cachedResult
 
         return result
-
-
-
 
 class TopFreeApps(webapp2.RequestHandler ,TopApps):
     def get(self):
@@ -120,16 +118,24 @@ class AppDetails(webapp2.RequestHandler):
     def get(self):
         self.response.headers.add_header('Access-Control-Allow-Origin', '*')
         self.response.headers['Content-Type'] = 'application/json'
+
         requested_url = self.request.url
-        result =defaultdict(lambda :'')
+        result ={}
         #query parameters from url
         parsed = urlparse.urlparse(requested_url)
         pkg_name = urlparse.parse_qs(parsed.query)['pkg'][0]
+        #check if app details in memecache
+        cachedResult = memcache.get(pkg_name)
+        if(cachedResult is not None):
+            self.response.write(json.dumps(cachedResult))
+            return
+
         #check if app details already present in DB
         topApps = modals.TopAppsModel()
         query_res  = topApps.get_by_key_name(pkg_name)
         if(query_res is None):
-            return {'error ' : 'No such App exist'}
+            error ={'error ' : 'No such App exist'}
+            self.response.write(json.dumps(error))
 
         if(len(query_res.resources)==0 ):
             ds = DataScrap()
@@ -149,6 +155,7 @@ class AppDetails(webapp2.RequestHandler):
         result['resources'] = query_res.resources
         result['description'] = query_res.description
 
+        memcache.set(pkg_name , result)
         self.response.write(json.dumps(result))
 
 

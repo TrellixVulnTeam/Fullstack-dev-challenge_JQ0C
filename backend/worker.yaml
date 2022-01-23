@@ -1,7 +1,6 @@
-service: navneet-fullstack-backend
 runtime: python27
-api_version: 1
 threadsafe: true
+service: worker
 
 skip_files:
   - ^(.*/)?#.*#$
@@ -11,7 +10,11 @@ skip_files:
   - ^(.*/)?\..*$
   - venv/
 
-
 handlers:
 - url: /.*
-  script: main.app
+  script: worker.app
+  login: admin
+
+libraries:
+- name: ssl
+  version: "2.7.11"
