@@ -40,6 +40,10 @@ class StoreAppsInDB(webapp2.RequestHandler):
             url='/scraptopapps',
             target='worker',
             queue_name='TopAppsScrappper')
+        try:
+            memcache.flush_all()
+        except BaseException as err:
+            logging.error(err)
         self.response.write('Scrapped Apps')
 
 class TopApps():
